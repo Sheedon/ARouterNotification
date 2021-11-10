@@ -27,7 +27,7 @@ public class NotificationRouter {
         }
     }
 
-    static synchronized void openDebug() {
+    public static synchronized void openDebug() {
         debuggable = true;
     }
 
