@@ -1,0 +1,4 @@
+rootProject.name = "ARouterNotification"
+include ':app'
+include ':an-annotation'
+include ':an-compiler'

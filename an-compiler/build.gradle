@@ -1,0 +1,20 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation 'com.squareup:javapoet:1.13.0'
+    implementation project(':an-annotation')
+    implementation "com.alibaba:arouter-api:1.5.2"
+
+    //noinspection AnnotationProcessorOnCompilePath
+    implementation 'com.google.auto.service:auto-service:1.0.1'
+    annotationProcessor 'com.google.auto.service:auto-service:1.0.1'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+apply from: '../script/gradle-jcenter-push.gradle'
