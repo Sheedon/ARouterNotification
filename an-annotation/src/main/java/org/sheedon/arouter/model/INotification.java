@@ -1,5 +1,7 @@
 package org.sheedon.arouter.model;
 
+import java.util.Map;
+
 /**
  * 通知职责
  *
@@ -10,11 +12,10 @@ package org.sheedon.arouter.model;
 public interface INotification {
 
     /**
-     * 获取触发器
+     * 通知触发器 附加到 triggerMap 中
      *
-     * @param key 消息类型key
-     * @return Trigger 触发者
+     * @return triggerMap 触发者
      */
-    ITrigger findTrigger(String key);
+    void attachTrigger(Map<String, ITrigger> triggerMap);
 
 }

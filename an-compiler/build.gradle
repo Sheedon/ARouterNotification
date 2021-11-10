@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation 'com.squareup:javapoet:1.13.0'
     implementation project(':an-annotation')
-    implementation "com.alibaba:arouter-api:1.5.2"
+    implementation "com.alibaba:arouter-annotation:1.0.6"
 
     //noinspection AnnotationProcessorOnCompilePath
     implementation 'com.google.auto.service:auto-service:1.0.1'

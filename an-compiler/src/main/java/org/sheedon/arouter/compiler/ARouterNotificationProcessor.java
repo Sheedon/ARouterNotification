@@ -7,7 +7,6 @@ import com.squareup.javapoet.ClassName;
 
 import org.sheedon.arouter.annotation.BindParameter;
 import org.sheedon.arouter.annotation.BindRouter;
-import org.sheedon.arouter.annotation.Communicant;
 import org.sheedon.arouter.annotation.RouteStrategy;
 
 import java.util.HashMap;
@@ -48,6 +47,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     private Messager mMessager;
     private Filer mFiler;
     private Elements mElementUtils;
+    String moduleName = null;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -55,6 +55,13 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         mMessager = processingEnv.getMessager();
         mFiler = processingEnv.getFiler();
         mElementUtils = processingEnv.getElementUtils();
+
+        Map<String, String> options = processingEnv.getOptions();
+        moduleName = options.get("AROUTER_MODULE_NAME");
+        if(moduleName != null && !moduleName.isEmpty()){
+            moduleName = moduleName.replaceAll("[^0-9a-zA-Z_]+", "");
+        }
+
     }
 
     /**
@@ -63,7 +70,6 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         HashSet<String> supportTypes = new LinkedHashSet<>();
-        supportTypes.add(Communicant.class.getCanonicalName());
         supportTypes.add(BindRouter.class.getCanonicalName());
         supportTypes.add(BindParameter.class.getCanonicalName());
         supportTypes.add(RouteStrategy.class.getCanonicalName());
@@ -82,15 +88,11 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnvironment) {
 
-
-        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Communicant.class);
-        if (elements.size() > 1) {
-            mMessager.printMessage(Diagnostic.Kind.ERROR, "only add annotation @Communicant once in application");
-        } else if (elements.size() == 1) {
+        if(annotations.size()>0) {
             return processNotification(annotations, roundEnvironment);
+        }else{
+            return false;
         }
-
-        return false;
     }
 
     /**
@@ -103,12 +105,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     private boolean processNotification(Set<? extends TypeElement> annotations,
                                         RoundEnvironment roundEnvironment) {
         CommunicantBuilder builder = new CommunicantBuilder(mElementUtils, mFiler, mMessager);
-
-        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Communicant.class);
-        for (Element element : elements) {
-            // 传入 TypeElement 用于构建通知代理类
-            builder.addTypeElement((TypeElement) element);
-        }
+        builder.addModuleName(moduleName);
 
         // 填充Route注解+ Activity全类名，用于后续备份路径查询操作
         Map<String, String> routeValues = new HashMap<>();

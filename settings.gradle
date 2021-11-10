@@ -2,3 +2,5 @@ rootProject.name = "ARouterNotification"
 include ':app'
 include ':an-annotation'
 include ':an-compiler'
+include ':app_other'
+include ':an-api'

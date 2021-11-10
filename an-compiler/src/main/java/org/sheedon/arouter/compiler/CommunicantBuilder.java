@@ -32,14 +32,17 @@ import javax.lang.model.util.Elements;
  */
 public class CommunicantBuilder {
 
+    public static final String ROUTE_ROOT_PACKAGE = "org.sheedon.android.arouter.proxy";
+    public static final String NAME_OF_PROXY = "Notification$$PROXY$$";
+
     // 元素处理工具类
     private final Elements mElementUtils;
     // 文件构造者
     private final Filer mFiler;
     // 消息处理器
     private final Messager mMessager;
-    // 通知调度Class
-    private ClassAttribute communicantClass;
+    // 当前类名
+    private String className;
 
     CommunicantBuilder(Elements elements, Filer filer, Messager messager) {
         this.mElementUtils = elements;
@@ -49,13 +52,9 @@ public class CommunicantBuilder {
 
     /**
      * 拿到类名和包名，创建代理方法
-     *
-     * @param element 接口信息
      */
-    void addTypeElement(TypeElement element) {
-        ClassName className = (ClassName) TypeName.get(element.asType());
-        communicantClass = new ClassAttribute(className);
-
+    void addModuleName(String moduleName) {
+        className = NAME_OF_PROXY + moduleName;
     }
 
     /**
@@ -65,13 +64,11 @@ public class CommunicantBuilder {
      */
     void buildClass(List<RouterWrapperAttribute> attributes) {
         try {
-            ClassName className = communicantClass.getClassName();
-            String proxyClassName = className.simpleName() + "Proxy";
+            String proxyClassName = className + "Proxy";
 
             List<MethodSpec> methodSpecs = new ArrayList<>();
 
-            methodSpecs.add(buildInterfaceImpl());
-            methodSpecs.add(buildAttachTrigger(attributes));
+            methodSpecs.add(buildInterfaceImpl(attributes));
 
             TypeSpec proxyComponent = TypeSpec.classBuilder(proxyClassName)
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -81,7 +78,7 @@ public class CommunicantBuilder {
                     .build();
 
 
-            JavaFile javaFile = JavaFile.builder(className.packageName(), proxyComponent)
+            JavaFile javaFile = JavaFile.builder(ROUTE_ROOT_PACKAGE, proxyComponent)
                     .build();
 
             javaFile.writeTo(mFiler);
@@ -103,32 +100,19 @@ public class CommunicantBuilder {
     /**
      * 实现接口实现
      */
-    private MethodSpec buildInterfaceImpl() {
+    private MethodSpec buildInterfaceImpl(List<RouterWrapperAttribute> attributes) {
 
-        return MethodSpec.methodBuilder("findTrigger")
-                .addParameter(String.class, "key")
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .beginControlFlow("if(triggerMap.size() == 0)")
-                .addStatement("attachTrigger()")
-                .endControlFlow()
-                .addStatement("return triggerMap.get(key)")
-                .returns(ITrigger.class)
-                .build();
-    }
+        ParameterizedTypeName typeName = ParameterizedTypeName.get(Map.class, String.class, ITrigger.class);
 
-    /**
-     * 构建填充触发者
-     */
-    private MethodSpec buildAttachTrigger(List<RouterWrapperAttribute> attributes) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("attachTrigger")
-                .addModifiers(Modifier.PRIVATE);
+                .addParameter(typeName, "triggerMap")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC);
 
         for (RouterWrapperAttribute attribute : attributes) {
             builder.addStatement("triggerMap.put(\"$N\", new $L())", attribute.getNotificationType(),
                     attribute.getWrapperClassName());
         }
-
 
         return builder.build();
     }
