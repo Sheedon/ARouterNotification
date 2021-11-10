@@ -58,7 +58,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
 
         Map<String, String> options = processingEnv.getOptions();
         moduleName = options.get("AROUTER_MODULE_NAME");
-        if(moduleName != null && !moduleName.isEmpty()){
+        if (moduleName != null && !moduleName.isEmpty()) {
             moduleName = moduleName.replaceAll("[^0-9a-zA-Z_]+", "");
         }
 
@@ -88,9 +88,9 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnvironment) {
 
-        if(annotations.size()>0) {
+        if (annotations.size() > 0) {
             return processNotification(annotations, roundEnvironment);
-        }else{
+        } else {
             return false;
         }
     }
@@ -104,7 +104,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
      */
     private boolean processNotification(Set<? extends TypeElement> annotations,
                                         RoundEnvironment roundEnvironment) {
-        CommunicantBuilder builder = new CommunicantBuilder(mElementUtils, mFiler, mMessager);
+        CommunicantBuilder builder = new CommunicantBuilder(mFiler);
         builder.addModuleName(moduleName);
 
         // 填充Route注解+ Activity全类名，用于后续备份路径查询操作
