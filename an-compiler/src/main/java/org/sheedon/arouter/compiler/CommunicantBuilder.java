@@ -1,11 +1,9 @@
 package org.sheedon.arouter.compiler;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import org.sheedon.arouter.model.INotification;
@@ -18,10 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 /**
  * 通知调度者构建 处理器
@@ -35,19 +30,13 @@ public class CommunicantBuilder {
     public static final String ROUTE_ROOT_PACKAGE = "org.sheedon.android.arouter.proxy";
     public static final String NAME_OF_PROXY = "Notification$$PROXY$$";
 
-    // 元素处理工具类
-    private final Elements mElementUtils;
     // 文件构造者
     private final Filer mFiler;
-    // 消息处理器
-    private final Messager mMessager;
     // 当前类名
     private String className;
 
-    CommunicantBuilder(Elements elements, Filer filer, Messager messager) {
-        this.mElementUtils = elements;
+    CommunicantBuilder(Filer filer) {
         this.mFiler = filer;
-        this.mMessager = messager;
     }
 
     /**
@@ -60,7 +49,7 @@ public class CommunicantBuilder {
     /**
      * 构建Class
      *
-     * @param attributes
+     * @param attributes 属性
      */
     void buildClass(List<RouterWrapperAttribute> attributes) {
         try {
