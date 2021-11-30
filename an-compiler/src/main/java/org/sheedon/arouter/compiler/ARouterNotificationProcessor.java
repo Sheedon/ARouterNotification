@@ -91,7 +91,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         if (annotations.size() > 0) {
             return processNotification(annotations, roundEnvironment);
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -154,14 +154,14 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             if (!path.equals("") && !routeValues.containsKey(path)) {
                 // 路由Card的备用路径，没有找到Route下的路径
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The alternate path of RouterCard where " + qualifiedName
-                        + ", the path under Route was not found");
-                return false;
+                        + ", the path under Route was not found", element);
+                return true;
             }
             String notificationType = route.notificationType();
             if (notificationType.isEmpty()) {
                 // 路由策略配置的通知类型，若通知为空，则提示错误
-                mMessager.printMessage(Diagnostic.Kind.ERROR, qualifiedName + "'s notificationType cannot empty");
-                return false;
+                mMessager.printMessage(Diagnostic.Kind.ERROR, qualifiedName + "'s notificationType cannot empty", element);
+                return true;
             }
 
             RouterCardAttribute cardAttribute = routerCardMap.computeIfAbsent(qualifiedName, card -> new RouterCardAttribute());
@@ -171,7 +171,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             // ActivityAttribute 中包含 Field的属性和注解name
             ActivityAttribute activityAttribute = autowiredMap.get(activityQualifiedName);
             // 核实绑定路由卡片类信息
-            checkBindRouterCard(activityAttribute, cardAttribute, qualifiedName, activityQualifiedName);
+            checkBindRouterCard(activityAttribute, cardAttribute, qualifiedName, activityQualifiedName, element);
         }
 
         RouterWrapperBuilder wrapperBuilder = new RouterWrapperBuilder(mElementUtils, mFiler, mMessager);
@@ -192,14 +192,14 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             RouterCardAttribute cardAttribute = routerCardMap.get(canonicalName);
 
             // 核实绑定路由卡片类信息
-            checkBindRouterCard(activityAttribute, cardAttribute, canonicalName, activityQualifiedName);
+            checkBindRouterCard(activityAttribute, cardAttribute, canonicalName, activityQualifiedName, element);
 
             // 传入 路由Card 用于构建
             wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute);
         }
 
         builder.buildClass(wrapperBuilder.getAttributes());
-        return false;
+        return true;
     }
 
     /**
@@ -210,7 +210,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         Route annotation = element.getAnnotation(Route.class);
         if (annotation == null || annotation.path().equals("")) {
             String className = element.getSimpleName().toString();
-            mMessager.printMessage(Diagnostic.Kind.ERROR, "please add annotation @Route to " + className);
+            mMessager.printMessage(Diagnostic.Kind.ERROR, "please add annotation @Route to " + className, element);
             return null;
         }
         return annotation.path();
@@ -241,12 +241,12 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
                     }
 
                     return ClassNameUtils.loadClassNameByQualifiedName(qualifiedName, mMessager,
-                            "Method threw 'java.lang.ClassNotFoundException' exception. " + qualifiedName);
+                            "Method threw 'java.lang.ClassNotFoundException' exception. " + qualifiedName, executableElement);
                 }
             }
         }
 
-        mMessager.printMessage(Diagnostic.Kind.ERROR, "please add annotation @BindRouter " + element.getSimpleName().toString());
+        mMessager.printMessage(Diagnostic.Kind.ERROR, "please add annotation @BindRouter " + element.getSimpleName().toString(), element);
         return null;
     }
 
@@ -259,7 +259,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
      * @param activityQualifiedName activity 全类名
      */
     private void checkBindRouterCard(ActivityAttribute activityAttribute, RouterCardAttribute cardAttribute,
-                                     String canonicalName, String activityQualifiedName) {
+                                     String canonicalName, String activityQualifiedName, Element element) {
         // 没有 Filed
         if (activityAttribute == null || activityAttribute.getAttributes().isEmpty()) {
             return;
@@ -271,7 +271,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         if (cardAttribute == null || cardAttribute.getParameters().isEmpty()) {
             // 路由Card的@BindParameter 缺失 与 activity的@Autowired 的对应数据
             mMessager.printMessage(Diagnostic.Kind.ERROR, "The @BindParameter of the " + canonicalName
-                    + " is missing and the corresponding data of @Autowired of the " + activityQualifiedName);
+                    + " is missing and the corresponding data of @Autowired of the " + activityQualifiedName, element);
             return;
         }
 
@@ -282,7 +282,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             if (returnType == null) {
                 // 路由Card的@BindParameter 找不到对应 activity中@Autowired 的 name
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The @BindParameter of the " + canonicalName
-                        + " cannot find the " + name + " of @Autowired in the corresponding " + activityQualifiedName);
+                        + " cannot find the " + name + " of @Autowired in the corresponding " + activityQualifiedName,element);
                 return;
             }
 
@@ -292,7 +292,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
 
             // 路由Card的@BindParameter注解的Method返回值 与 activity中@Autowired 的 Filed 类型不一致
             mMessager.printMessage(Diagnostic.Kind.ERROR, "The method return value of the @BindParameter annotation of the " + canonicalName
-                    + " is inconsistent with the Filed " + name + " type of @Autowired in the " + activityQualifiedName);
+                    + " is inconsistent with the Filed " + name + " type of @Autowired in the " + activityQualifiedName,element);
             return;
         }
 

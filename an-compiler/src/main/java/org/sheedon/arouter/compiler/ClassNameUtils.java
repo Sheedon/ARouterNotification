@@ -3,6 +3,7 @@ package org.sheedon.arouter.compiler;
 import com.squareup.javapoet.ClassName;
 
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 
 /**
@@ -22,11 +23,11 @@ class ClassNameUtils {
      * @param info          错误消息
      * @return ClassName
      */
-    static ClassName loadClassNameByQualifiedName(String qualifiedName, Messager mMessager, String info) {
+    static ClassName loadClassNameByQualifiedName(String qualifiedName, Messager mMessager, String info, Element element) {
         int index = qualifiedName.lastIndexOf(".");
 
         if (index == -1) {
-            mMessager.printMessage(Diagnostic.Kind.ERROR, info);
+            mMessager.printMessage(Diagnostic.Kind.ERROR, info, element);
             return null;
         }
 

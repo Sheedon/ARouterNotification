@@ -96,7 +96,7 @@ class RouterWrapperBuilder {
         if (genericStart != -1) {
             String generic = superclassInfo.substring(genericStart + 1, superclassInfo.length() - 1);
             ClassName genericClassName = ClassNameUtils.loadClassNameByQualifiedName(generic, mMessager,
-                    "generic exception. ");
+                    "generic exception. ", typeElement);
             superclassTypeName = ParameterizedTypeName.get(ClassName.get(BindRouterWrapper.class), genericClassName);
         } else {
             superclassTypeName = ParameterizedTypeName.get(BindRouterWrapper.class);
