@@ -99,8 +99,10 @@ public class CommunicantBuilder {
                 .addModifiers(Modifier.PUBLIC);
 
         for (RouterWrapperAttribute attribute : attributes) {
-            builder.addStatement("triggerMap.put(\"$N\", new $L())", attribute.getNotificationType(),
-                    attribute.getWrapperClassName());
+            for (String type : attribute.getNotificationType()) {
+                builder.addStatement("triggerMap.put(\"$N\", new $L())", type,
+                        attribute.getWrapperClassName());
+            }
         }
 
         return builder.build();

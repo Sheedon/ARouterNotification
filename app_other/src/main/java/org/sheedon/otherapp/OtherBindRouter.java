@@ -15,7 +15,7 @@ import java.util.Random;
  * @Email: sheedonsun@163.com
  * @Date: 2021/11/4 3:19 下午
  */
-@RouteStrategy(notificationType = "144")
+@RouteStrategy(notificationType = {"144","145"})
 public class OtherBindRouter extends BindRouterCard<String> {
 
     @BindParameter(name = "id")
@@ -30,12 +30,13 @@ public class OtherBindRouter extends BindRouterCard<String> {
 
     @Override
     protected void startActivity(String targetRoute, String spareRoute) {
-//        boolean nextBoolean = new Random().nextBoolean();
+        boolean nextBoolean = new Random().nextBoolean();
 //        if (nextBoolean) {
-//            ARouter.getInstance().build(targetRoute)
-//                    .withLong("id", getId())
-//                    .withString("name", getName())
-//                    .navigation();
+            ARouter.getInstance().build(targetRoute)
+                    .withLong("id", getId())
+                    .withString("name", getName())
+                    .navigation();
+
 //        } else {
 //            ARouter.getInstance().build(spareRoute).navigation();
 //        }

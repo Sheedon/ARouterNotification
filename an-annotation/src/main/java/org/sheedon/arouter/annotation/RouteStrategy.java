@@ -18,5 +18,5 @@ public @interface RouteStrategy {
 
     String spareRoute() default "";
 
-    String notificationType();
+    String[] notificationType();
 }

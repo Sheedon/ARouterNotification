@@ -15,7 +15,7 @@ import java.util.Random;
  * @Email: sheedonsun@163.com
  * @Date: 2021/11/4 3:19 下午
  */
-@RouteStrategy(spareRoute = "/Test/SpareActivity", notificationType = "132")
+@RouteStrategy(spareRoute = "/Test/SpareActivity", notificationType = {"111", "131"})
 public class TestBindRouter extends BindRouterCard<String> {
 
     @BindParameter(name = "id")

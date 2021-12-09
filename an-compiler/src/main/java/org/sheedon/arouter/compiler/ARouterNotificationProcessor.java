@@ -89,21 +89,19 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
                            RoundEnvironment roundEnvironment) {
 
         if (annotations.size() > 0) {
-            return processNotification(annotations, roundEnvironment);
+            return processNotification(roundEnvironment);
         } else {
-            return true;
+            return false;
         }
     }
 
     /**
      * 执行通知注解文件生成的流程
      *
-     * @param annotations      注解集合
      * @param roundEnvironment 当前这一轮的环境
      * @return 执行完成
      */
-    private boolean processNotification(Set<? extends TypeElement> annotations,
-                                        RoundEnvironment roundEnvironment) {
+    private boolean processNotification(RoundEnvironment roundEnvironment) {
         CommunicantBuilder builder = new CommunicantBuilder(mFiler);
         builder.addModuleName(moduleName);
 
@@ -155,13 +153,13 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
                 // 路由Card的备用路径，没有找到Route下的路径
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The alternate path of RouterCard where " + qualifiedName
                         + ", the path under Route was not found", element);
-                return true;
+                return false;
             }
-            String notificationType = route.notificationType();
-            if (notificationType.isEmpty()) {
+            String[] notificationType = route.notificationType();
+            if (notificationType.length == 0) {
                 // 路由策略配置的通知类型，若通知为空，则提示错误
                 mMessager.printMessage(Diagnostic.Kind.ERROR, qualifiedName + "'s notificationType cannot empty", element);
-                return true;
+                return false;
             }
 
             RouterCardAttribute cardAttribute = routerCardMap.computeIfAbsent(qualifiedName, card -> new RouterCardAttribute());
@@ -199,7 +197,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         }
 
         builder.buildClass(wrapperBuilder.getAttributes());
-        return true;
+        return false;
     }
 
     /**
@@ -282,7 +280,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             if (returnType == null) {
                 // 路由Card的@BindParameter 找不到对应 activity中@Autowired 的 name
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The @BindParameter of the " + canonicalName
-                        + " cannot find the " + name + " of @Autowired in the corresponding " + activityQualifiedName,element);
+                        + " cannot find the " + name + " of @Autowired in the corresponding " + activityQualifiedName, element);
                 return;
             }
 
@@ -292,7 +290,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
 
             // 路由Card的@BindParameter注解的Method返回值 与 activity中@Autowired 的 Filed 类型不一致
             mMessager.printMessage(Diagnostic.Kind.ERROR, "The method return value of the @BindParameter annotation of the " + canonicalName
-                    + " is inconsistent with the Filed " + name + " type of @Autowired in the " + activityQualifiedName,element);
+                    + " is inconsistent with the Filed " + name + " type of @Autowired in the " + activityQualifiedName, element);
             return;
         }
 

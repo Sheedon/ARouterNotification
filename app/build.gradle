@@ -44,6 +44,8 @@ dependencies {
 
     implementation project(':an-api')
     annotationProcessor project(':an-compiler')
+//    implementation "com.github.Sheedon.ARouterNotification:an-api:0.3-SNAPSHOT"
+//    annotationProcessor "com.github.Sheedon.ARouterNotification:an-compiler:0.3-SNAPSHOT"
 
     implementation "com.alibaba:arouter-api:1.5.2"
     annotationProcessor "com.alibaba:arouter-compiler:1.5.2"

@@ -17,10 +17,10 @@ class RouterCardAttribute {
 
     private TypeElement typeElement;
     private String spareRoute;
-    private String notificationType;
+    private String[] notificationType;
     private Map<String, String> parameters = new HashMap<>();
 
-    public void addRouteInfo(TypeElement typeElement, String path, String notificationType) {
+    public void addRouteInfo(TypeElement typeElement, String path, String[] notificationType) {
         this.typeElement = typeElement;
         this.spareRoute = path;
         this.notificationType = notificationType;
@@ -38,7 +38,7 @@ class RouterCardAttribute {
         return typeElement;
     }
 
-    public String getNotificationType() {
+    public String[] getNotificationType() {
         return notificationType;
     }
 

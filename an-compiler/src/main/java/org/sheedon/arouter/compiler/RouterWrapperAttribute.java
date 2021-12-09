@@ -11,15 +11,15 @@ import com.squareup.javapoet.ClassName;
  */
 public class RouterWrapperAttribute {
 
-    private String notificationType;
+    private String[] notificationType;
     private ClassName wrapperClassName;
 
-    public RouterWrapperAttribute(String notificationType, ClassName wrapperClassName) {
+    public RouterWrapperAttribute(String[] notificationType, ClassName wrapperClassName) {
         this.notificationType = notificationType;
         this.wrapperClassName = wrapperClassName;
     }
 
-    public String getNotificationType() {
+    public String[] getNotificationType() {
         return notificationType;
     }
 

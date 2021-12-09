@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ARouter.init(getApplication());
+        ARouter.openDebug();
         NotificationRouter.init(getApplication());
         NotificationRouter.debuggable();
         notificationClient = new NotificationClient();
@@ -27,5 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void onTouchClick(View view) {
         notificationClient.notifyInfo();
+//        ARouter.getInstance().build("/Test/TargetActivity").navigation();
     }
 }
