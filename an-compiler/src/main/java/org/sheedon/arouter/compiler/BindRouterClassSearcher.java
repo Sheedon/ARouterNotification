@@ -52,13 +52,23 @@ public class BindRouterClassSearcher {
         }
 
         String qualifiedName = element.getQualifiedName().toString();
-        classMap.putIfAbsent(qualifiedName, new RetrievalClassModel());
+        RetrievalClassModel currentModel = classMap.get(qualifiedName);
+        if (currentModel != null && currentModel.isCompeted()) {
+            return currentModel;
+        }
+        if (currentModel == null) {
+            classMap.putIfAbsent(qualifiedName, currentModel = new RetrievalClassModel());
+        }
+
 
         TypeElement superElement = (TypeElement) types.asElement(superTypeMirror);
         String superclassName = superElement.getQualifiedName().toString();
         RetrievalClassModel superClassModel = classMap.get(superclassName);
         if (superClassModel != null) {
-            return superClassModel;
+            if (superClassModel.isCompeted()) {
+                currentModel.bindGenericsRecord(superClassModel.getRecord());
+                return currentModel;
+            }
         }
 
         // 节点类型
@@ -86,7 +96,6 @@ public class BindRouterClassSearcher {
             return null;
         }
 
-        RetrievalClassModel currentModel = classMap.get(qualifiedName);
         if (classModel.isCompeted()) {
             currentModel.bindGenericsRecord(classModel.getRecord());
             return currentModel;

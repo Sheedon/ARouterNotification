@@ -78,7 +78,7 @@ class RouterWrapperBuilder {
 
 
             methodSpecList.add(buildStartActivity(genericName, routerAdapter,
-                    targetRoutePath, cardAttribute, targetActivity));
+                    cardAttribute, targetActivity));
 
             TypeSpec wrapperTypeSpec = TypeSpec.classBuilder(wrapperClassName)
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -160,13 +160,11 @@ class RouterWrapperBuilder {
      *
      * @param genericName         泛型名
      * @param routerAdapter       路由适配器类
-     * @param targetRoutePath     目标路由路径
      * @param routerCardAttribute 路由适配器参数
      * @param targetActivityAttr  目标Activity参数
      * @return MethodSpec
      */
     private MethodSpec buildStartActivity(String genericName, ClassName routerAdapter,
-                                          String targetRoutePath,
                                           RouterCardAttribute routerCardAttribute,
                                           ActivityAttribute targetActivityAttr) {
         TypeName routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), ClassName.bestGuess(genericName));
@@ -176,18 +174,19 @@ class RouterWrapperBuilder {
                 .addAnnotation(Override.class)
                 .addParameter(ParameterSpec.builder(routerClassName, "routerAdapter").build())
                 .addParameter(ParameterSpec.builder(ClassName.get(String.class), "targetRoutePath").build())
-                .addParameter(ParameterSpec.builder(ClassName.get(String.class), "spareRoute").build())
+                .addParameter(ParameterSpec.builder(ClassName.get(String.class), "spareRoutePath").build())
                 .addStatement("$T adapter = ($T) routerAdapter", routerAdapter, routerAdapter);
 
 
         if (targetActivityAttr == null) {
-            builder.addStatement("$T.getInstance().build(\"$N\").navigation()", aRouterClassName, targetRoutePath);
+            builder.addStatement("$T.getInstance().build(targetRoutePath).navigation()", aRouterClassName);
             return builder.build();
         }
 
-        addWithParameter(targetActivityAttr, routerCardAttribute, targetRoutePath, builder);
+        addWithParameter(targetActivityAttr, routerCardAttribute, "targetRoutePath", false, builder);
         addWithParameter(routerCardAttribute.getSpareActivityAttribute(),
-                routerCardAttribute, routerCardAttribute.getSpareRoute(), builder);
+                routerCardAttribute, "spareRoutePath",
+                routerCardAttribute.getSpareRoute() == null || routerCardAttribute.getSpareRoute().isEmpty(), builder);
 
 
         return builder.build();
@@ -203,10 +202,15 @@ class RouterWrapperBuilder {
     private void addWithParameter(ActivityAttribute activityAttr,
                                   RouterCardAttribute routerCardAttribute,
                                   String routerPath,
+                                  boolean isEmpty,
                                   MethodSpec.Builder builder) {
 
+        if (isEmpty) {
+            return;
+        }
+
         if (activityAttr == null) {
-            builder.addStatement("$T.getInstance().build(\"$N\").navigation()", aRouterClassName, routerPath);
+            builder.addStatement("$T.getInstance().build($N).navigation()", aRouterClassName, routerPath);
             return;
         }
 
@@ -242,7 +246,7 @@ class RouterWrapperBuilder {
 
                 conditionBuilder.append(".").append(withParameter);
             }
-            builder.addStatement("$T.getInstance().build(\"$N\")$N.navigation()", aRouterClassName,
+            builder.addStatement("$T.getInstance().build($N)$N.navigation()", aRouterClassName,
                     routerPath, conditionBuilder.toString());
             builder.addStatement("return");
             builder.endControlFlow();
