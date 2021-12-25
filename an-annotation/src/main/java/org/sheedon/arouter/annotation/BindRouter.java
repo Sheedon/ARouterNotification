@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
 public @interface BindRouter {
 
     // 路由卡片Model类
-    Class<? extends BindRouterCard> routerClass();
+    Class<? extends BindRouterCard<?>> routerClass();
 
     // 字段说明
     String desc() default "";

@@ -53,6 +53,18 @@ public abstract class BindRouterWrapper<T> implements ITrigger<T> {
      */
     @Override
     public void startActivity() {
-        routerCard.startActivity(targetRoute, spareRoute);
+        boolean isExecuted = routerCard.startActivity(targetRoute, spareRoute);
+        if (isExecuted) {
+            return;
+        }
+        startActivity(routerCard, targetRoute, spareRoute);
     }
+
+    /**
+     * 根据条件跳转到「目标路径的Activity」、「备用目标路径Activity」或 执行错误提示
+     *
+     * @param targetRoute 目标路径
+     * @param spareRoute  备用路径
+     */
+    protected abstract void startActivity(BindRouterCard<T> routerCard, String targetRoute, String spareRoute);
 }

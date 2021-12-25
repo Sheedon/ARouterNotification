@@ -1,7 +1,7 @@
 package org.sheedon.arouter.model;
 
 /**
- * 所绑定的路由model
+ * 所绑定的路由适配器
  * 负责真实跳转动作
  *
  * @Author: sheedon
@@ -33,8 +33,11 @@ public abstract class BindRouterCard<T> {
      *
      * @param targetRoute 目标路径
      * @param spareRoute  备用路径
+     * @return 是否实现，若未实现，则使用默认方法
      */
-    protected abstract void startActivity(String targetRoute, String spareRoute);
+    protected boolean startActivity(String targetRoute, String spareRoute){
+        return false;
+    }
 
     /**
      * 获取错误信息
