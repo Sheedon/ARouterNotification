@@ -1,12 +1,8 @@
 package org.sheedon.otherapp;
 
-import com.alibaba.android.arouter.launcher.ARouter;
-
 import org.sheedon.arouter.annotation.BindParameter;
 import org.sheedon.arouter.annotation.RouteStrategy;
 import org.sheedon.arouter.model.BindRouterCard;
-
-import java.util.Random;
 
 /**
  * java类作用描述
@@ -28,19 +24,20 @@ public class OtherBindRouter extends BindRouterCard<String> {
         return "aaa";
     }
 
-    @Override
-    protected void startActivity(String targetRoute, String spareRoute) {
-        boolean nextBoolean = new Random().nextBoolean();
-//        if (nextBoolean) {
-            ARouter.getInstance().build(targetRoute)
-                    .withLong("id", getId())
-                    .withString("name", getName())
-                    .navigation();
-
-//        } else {
-//            ARouter.getInstance().build(spareRoute).navigation();
-//        }
-    }
+//    @Override
+//    protected boolean startActivity(String targetRoute, String spareRoute) {
+//        boolean nextBoolean = new Random().nextBoolean();
+////        if (nextBoolean) {
+//            ARouter.getInstance().build(targetRoute)
+//                    .withLong("id", getId())
+//                    .withString("name", getName())
+//                    .navigation();
+//
+////        } else {
+////            ARouter.getInstance().build(spareRoute).navigation();
+////        }
+//        return true;
+//    }
 
 
     @Override

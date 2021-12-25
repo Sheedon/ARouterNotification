@@ -29,7 +29,7 @@ public class TestBindRouter extends BindRouterCard<String> {
     }
 
     @Override
-    protected void startActivity(String targetRoute, String spareRoute) {
+    protected boolean startActivity(String targetRoute, String spareRoute) {
         boolean nextBoolean = new Random().nextBoolean();
         if (nextBoolean) {
             ARouter.getInstance().build(targetRoute)
@@ -39,6 +39,8 @@ public class TestBindRouter extends BindRouterCard<String> {
         } else {
             ARouter.getInstance().build(spareRoute).navigation();
         }
+
+        return true;
     }
 
 

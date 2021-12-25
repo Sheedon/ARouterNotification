@@ -16,7 +16,7 @@ public class NotificationClient {
 
     @SuppressWarnings("unchecked")
     public void notifyInfo() {
-        ITrigger<String> trigger = NotificationRouter.findTrigger("144");
+        ITrigger<String> trigger = NotificationRouter.findTrigger("131");
         trigger.attachData("服务器拿到的数据");
 
         trigger.startActivity();

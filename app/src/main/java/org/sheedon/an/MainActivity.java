@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         ARouter.init(getApplication());
         ARouter.openDebug();
         NotificationRouter.init(getApplication());
-        NotificationRouter.debuggable();
+        NotificationRouter.openDebug();
         notificationClient = new NotificationClient();
 
 
