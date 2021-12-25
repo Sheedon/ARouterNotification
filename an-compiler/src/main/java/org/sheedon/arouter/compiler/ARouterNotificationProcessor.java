@@ -31,8 +31,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 /**
@@ -48,6 +48,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
     private Messager mMessager;
     private Filer mFiler;
     private Elements mElementUtils;
+    private Types mTypeUtils;
     String moduleName = null;
 
     @Override
@@ -56,6 +57,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         mMessager = processingEnv.getMessager();
         mFiler = processingEnv.getFiler();
         mElementUtils = processingEnv.getElementUtils();
+        mTypeUtils = processingEnv.getTypeUtils();
 
         Map<String, String> options = processingEnv.getOptions();
         moduleName = options.get("AROUTER_MODULE_NAME");
@@ -140,6 +142,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             cardAttribute.addFieldAttribute(parameter.name(), element.asType());
         }
 
+        BindRouterClassSearcher routerSearcher = new BindRouterClassSearcher();
 
         // 路由策略中核实 备用路径有，但是Activity中没有，则编译不过
         // 通知类型为空 编译不过
@@ -147,6 +150,11 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         Set<? extends Element> spareRouteElements = roundEnvironment.getElementsAnnotatedWith(RouteStrategy.class);
         for (Element element : spareRouteElements) {
             TypeElement typeElement = (TypeElement) element;
+            RetrievalClassModel retrievalClassModel = routerSearcher.searchClassGenerics(typeElement, mTypeUtils, mMessager);
+            if (!retrievalClassModel.getRecord().isCompeted()) {
+                return false;
+            }
+
             String qualifiedName = typeElement.getQualifiedName().toString();
             RouteStrategy route = element.getAnnotation(RouteStrategy.class);
             String path = route.spareRoute();
@@ -174,7 +182,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             checkBindRouterCard(activityAttribute, cardAttribute, qualifiedName, activityQualifiedName, element);
         }
 
-        RouterWrapperBuilder wrapperBuilder = new RouterWrapperBuilder(mElementUtils, mFiler, mMessager);
+        RouterWrapperBuilder wrapperBuilder = new RouterWrapperBuilder(mElementUtils, mFiler);
         Set<? extends Element> activityElements = roundEnvironment.getElementsAnnotatedWith(BindRouter.class);
         for (Element element : activityElements) {
             TypeElement typeElement = (TypeElement) element;
@@ -195,7 +203,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             checkBindRouterCard(activityAttribute, cardAttribute, canonicalName, activityQualifiedName, element);
 
             // 传入 路由Card 用于构建
-            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute, activityAttribute);
+            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute, activityAttribute, routerSearcher);
         }
 
         builder.buildClass(wrapperBuilder.getAttributes());

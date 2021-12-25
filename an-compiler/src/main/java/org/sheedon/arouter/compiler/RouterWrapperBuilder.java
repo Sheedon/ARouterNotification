@@ -16,10 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
@@ -39,17 +37,14 @@ class RouterWrapperBuilder {
     private final Elements mElementUtils;
     // 文件构造者
     private final Filer mFiler;
-    // 消息处理器
-    private final Messager mMessager;
     // 全部构建的包装类 参数
     private List<RouterWrapperAttribute> attributes = new ArrayList<>();
     // 字段核实并且填充的处理者
     private final WithHandler mWithHandler;
 
-    RouterWrapperBuilder(Elements elements, Filer filer, Messager messager) {
+    RouterWrapperBuilder(Elements elements, Filer filer) {
         this.mElementUtils = elements;
         this.mFiler = filer;
-        this.mMessager = messager;
         this.mWithHandler = new WithHandler();
     }
 
@@ -59,13 +54,19 @@ class RouterWrapperBuilder {
      *
      * @param cardAttribute   路由卡片参数
      * @param targetRoutePath 目标路径
+     * @param routerSearcher  路由检索者
      */
-    void buildRouterWrapper(RouterCardAttribute cardAttribute, String targetRoutePath, ActivityAttribute targetActivity) {
+    void buildRouterWrapper(RouterCardAttribute cardAttribute, String targetRoutePath,
+                            ActivityAttribute targetActivity, BindRouterClassSearcher routerSearcher) {
         try {
             TypeElement typeElement = cardAttribute.getTypeElement();
             String className = typeElement.getSimpleName().toString();
 
-            TypeName superclassTypeName = loadSuperclass(typeElement);
+            // 获取泛型
+            RetrievalClassModel retrievalClassModel = routerSearcher.getRetrievalClassByClassName(typeElement.getQualifiedName().toString());
+            String genericName = retrievalClassModel.getRecord().get();
+
+            TypeName superclassTypeName = loadSuperclass(genericName);
             String wrapperClassName = className + "Wrapper";
 
             // 路由适配器类
@@ -74,8 +75,9 @@ class RouterWrapperBuilder {
             List<MethodSpec> methodSpecList = new ArrayList<>();
             methodSpecList.add(createBuildMethod(routerAdapter));
             methodSpecList.add(buildMethodImpl(targetRoutePath, cardAttribute.getSpareRoute()));
-            ParameterizedTypeName typeName = (ParameterizedTypeName) superclassTypeName;
-            methodSpecList.add(buildStartActivity(typeName.typeArguments, routerAdapter,
+
+
+            methodSpecList.add(buildStartActivity(genericName, routerAdapter,
                     targetRoutePath, cardAttribute, targetActivity));
 
             TypeSpec wrapperTypeSpec = TypeSpec.classBuilder(wrapperClassName)
@@ -100,23 +102,21 @@ class RouterWrapperBuilder {
 
     }
 
+//    private ParameterizedTypeName convertParameterizedTypeName(TypeName typeName){
+//        if(typeName instanceof ParameterizedTypeName){
+//            return (ParameterizedTypeName) typeName;
+//        }
+//
+//        mTypeUtils.
+//    }
+
     /**
      * 继承父类
+     *
+     * @param genericName 泛型名
      */
-    private TypeName loadSuperclass(TypeElement typeElement) {
-        TypeName superclassTypeName;
-        TypeMirror superclass = typeElement.getSuperclass();
-        String superclassInfo = superclass.toString();
-        int genericStart = superclassInfo.indexOf("<");
-        if (genericStart != -1) {
-            String generic = superclassInfo.substring(genericStart + 1, superclassInfo.length() - 1);
-            ClassName genericClassName = ClassNameUtils.loadClassNameByQualifiedName(generic, mMessager,
-                    "generic exception. ", typeElement);
-            superclassTypeName = ParameterizedTypeName.get(ClassName.get(BindRouterWrapper.class), genericClassName);
-        } else {
-            superclassTypeName = ParameterizedTypeName.get(BindRouterWrapper.class);
-        }
-        return superclassTypeName;
+    private TypeName loadSuperclass(String genericName) {
+        return ParameterizedTypeName.get(ClassName.get(BindRouterWrapper.class), ClassName.bestGuess(genericName));
     }
 
     /**
@@ -158,24 +158,18 @@ class RouterWrapperBuilder {
     /**
      * 启动Activity
      *
-     * @param typeArguments       泛型类型
+     * @param genericName         泛型名
      * @param routerAdapter       路由适配器类
      * @param targetRoutePath     目标路由路径
      * @param routerCardAttribute 路由适配器参数
      * @param targetActivityAttr  目标Activity参数
      * @return MethodSpec
      */
-    private MethodSpec buildStartActivity(List<TypeName> typeArguments, ClassName routerAdapter,
+    private MethodSpec buildStartActivity(String genericName, ClassName routerAdapter,
                                           String targetRoutePath,
                                           RouterCardAttribute routerCardAttribute,
                                           ActivityAttribute targetActivityAttr) {
-        TypeName routerClassName;
-        if (typeArguments != null && !typeArguments.isEmpty()) {
-            TypeName typeName = typeArguments.get(0);
-            routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), typeName);
-        } else {
-            routerClassName = ClassName.get(BindRouterCard.class);
-        }
+        TypeName routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), ClassName.bestGuess(genericName));
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("startActivity")
                 .addModifiers(Modifier.PROTECTED)
@@ -207,9 +201,9 @@ class RouterWrapperBuilder {
      * @param builder             方法构建者
      */
     private void addWithParameter(ActivityAttribute activityAttr,
-                                     RouterCardAttribute routerCardAttribute,
-                                     String routerPath,
-                                     MethodSpec.Builder builder) {
+                                  RouterCardAttribute routerCardAttribute,
+                                  String routerPath,
+                                  MethodSpec.Builder builder) {
 
         if (activityAttr == null) {
             builder.addStatement("$T.getInstance().build(\"$N\").navigation()", aRouterClassName, routerPath);
