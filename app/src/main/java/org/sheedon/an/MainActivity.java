@@ -19,8 +19,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ARouter.init(getApplication());
         ARouter.openDebug();
-        NotificationRouter.init(getApplication());
         NotificationRouter.openDebug();
+        NotificationRouter.init(getApplication());
         notificationClient = new NotificationClient();
 
 
