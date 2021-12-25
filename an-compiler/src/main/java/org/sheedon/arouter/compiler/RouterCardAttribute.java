@@ -3,6 +3,7 @@ package org.sheedon.arouter.compiler;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -17,17 +18,19 @@ class RouterCardAttribute {
 
     private TypeElement typeElement;
     private String spareRoute;
+    private ActivityAttribute spareActivityAttribute;
     private String[] notificationType;
-    private Map<String, String> parameters = new HashMap<>();
+    private Map<String, ExecutableElement> parameters = new HashMap<>();
 
-    public void addRouteInfo(TypeElement typeElement, String path, String[] notificationType) {
+    public void addRouteInfo(TypeElement typeElement, String path,
+                             String[] notificationType) {
         this.typeElement = typeElement;
         this.spareRoute = path;
         this.notificationType = notificationType;
     }
 
-    public void addParameter(String name, TypeMirror typeMirror) {
-        parameters.put(name, typeMirror.toString());
+    public void addParameter(String name, ExecutableElement typeMirror) {
+        parameters.put(name, typeMirror);
     }
 
     public String getSpareRoute() {
@@ -42,9 +45,16 @@ class RouterCardAttribute {
         return notificationType;
     }
 
-    public Map<String, String> getParameters() {
+    public Map<String, ExecutableElement> getParameters() {
         return parameters;
     }
 
 
+    public void addSpareActivity(ActivityAttribute activityAttribute) {
+        this.spareActivityAttribute = activityAttribute;
+    }
+
+    public ActivityAttribute getSpareActivityAttribute() {
+        return spareActivityAttribute;
+    }
 }

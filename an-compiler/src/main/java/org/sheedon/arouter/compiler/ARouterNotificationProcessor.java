@@ -31,6 +31,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
@@ -124,7 +125,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             String qualifiedName = typeElement.getQualifiedName().toString();
             BindParameter parameter = element.getAnnotation(BindParameter.class);
             RouterCardAttribute cardAttribute = routerCardMap.computeIfAbsent(qualifiedName, card -> new RouterCardAttribute());
-            cardAttribute.addParameter(parameter.name(), executableElement.getReturnType());
+            cardAttribute.addParameter(parameter.name(), executableElement);
         }
 
         Map<String, ActivityAttribute> autowiredMap = new HashMap<>();
@@ -168,6 +169,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             String activityQualifiedName = routeValues.get(path);
             // ActivityAttribute 中包含 Field的属性和注解name
             ActivityAttribute activityAttribute = autowiredMap.get(activityQualifiedName);
+            cardAttribute.addSpareActivity(activityAttribute);
             // 核实绑定路由卡片类信息
             checkBindRouterCard(activityAttribute, cardAttribute, qualifiedName, activityQualifiedName, element);
         }
@@ -193,7 +195,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             checkBindRouterCard(activityAttribute, cardAttribute, canonicalName, activityQualifiedName, element);
 
             // 传入 路由Card 用于构建
-            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute);
+            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute, activityAttribute);
         }
 
         builder.buildClass(wrapperBuilder.getAttributes());
@@ -273,10 +275,10 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             return;
         }
 
-        Map<String, String> parameters = cardAttribute.getParameters();
+        Map<String, ExecutableElement> parameters = cardAttribute.getParameters();
         for (ActivityAttribute.FieldAttribute attribute : attributes) {
             String name = attribute.getName();
-            String returnType = parameters.get(name);
+            String returnType = parameters.get(name).getReturnType().toString();
             if (returnType == null) {
                 // 路由Card的@BindParameter 找不到对应 activity中@Autowired 的 name
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The @BindParameter of the " + canonicalName

@@ -3,10 +3,12 @@ package org.sheedon.arouter.compiler;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
+import org.sheedon.arouter.model.BindRouterCard;
 import org.sheedon.arouter.model.BindRouterWrapper;
 
 import java.io.IOException;
@@ -29,6 +31,10 @@ import javax.lang.model.util.Elements;
  */
 class RouterWrapperBuilder {
 
+    private final static String A_ROUTER_PACKAGE = "com.alibaba.android.arouter.launcher";
+
+    private final ClassName aRouterClassName = ClassName.get(A_ROUTER_PACKAGE, "ARouter");
+
     // 元素处理工具类
     private final Elements mElementUtils;
     // 文件构造者
@@ -37,11 +43,14 @@ class RouterWrapperBuilder {
     private final Messager mMessager;
     // 全部构建的包装类 参数
     private List<RouterWrapperAttribute> attributes = new ArrayList<>();
+    // 字段核实并且填充的处理者
+    private final WithHandler mWithHandler;
 
     RouterWrapperBuilder(Elements elements, Filer filer, Messager messager) {
         this.mElementUtils = elements;
         this.mFiler = filer;
         this.mMessager = messager;
+        this.mWithHandler = new WithHandler();
     }
 
 
@@ -51,7 +60,7 @@ class RouterWrapperBuilder {
      * @param cardAttribute   路由卡片参数
      * @param targetRoutePath 目标路径
      */
-    void buildRouterWrapper(RouterCardAttribute cardAttribute, String targetRoutePath) {
+    void buildRouterWrapper(RouterCardAttribute cardAttribute, String targetRoutePath, ActivityAttribute targetActivity) {
         try {
             TypeElement typeElement = cardAttribute.getTypeElement();
             String className = typeElement.getSimpleName().toString();
@@ -59,9 +68,15 @@ class RouterWrapperBuilder {
             TypeName superclassTypeName = loadSuperclass(typeElement);
             String wrapperClassName = className + "Wrapper";
 
+            // 路由适配器类
+            ClassName routerAdapter = ClassName.get(typeElement);
+
             List<MethodSpec> methodSpecList = new ArrayList<>();
-            methodSpecList.add(createBuildMethod(ClassName.get(typeElement)));
+            methodSpecList.add(createBuildMethod(routerAdapter));
             methodSpecList.add(buildMethodImpl(targetRoutePath, cardAttribute.getSpareRoute()));
+            ParameterizedTypeName typeName = (ParameterizedTypeName) superclassTypeName;
+            methodSpecList.add(buildStartActivity(typeName.typeArguments, routerAdapter,
+                    targetRoutePath, cardAttribute, targetActivity));
 
             TypeSpec wrapperTypeSpec = TypeSpec.classBuilder(wrapperClassName)
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -138,6 +153,106 @@ class RouterWrapperBuilder {
         }
 
         return builder.build();
+    }
+
+    /**
+     * 启动Activity
+     *
+     * @param typeArguments       泛型类型
+     * @param routerAdapter       路由适配器类
+     * @param targetRoutePath     目标路由路径
+     * @param routerCardAttribute 路由适配器参数
+     * @param targetActivityAttr  目标Activity参数
+     * @return MethodSpec
+     */
+    private MethodSpec buildStartActivity(List<TypeName> typeArguments, ClassName routerAdapter,
+                                          String targetRoutePath,
+                                          RouterCardAttribute routerCardAttribute,
+                                          ActivityAttribute targetActivityAttr) {
+        TypeName routerClassName;
+        if (typeArguments != null && !typeArguments.isEmpty()) {
+            TypeName typeName = typeArguments.get(0);
+            routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), typeName);
+        } else {
+            routerClassName = ClassName.get(BindRouterCard.class);
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("startActivity")
+                .addModifiers(Modifier.PROTECTED)
+                .addAnnotation(Override.class)
+                .addParameter(ParameterSpec.builder(routerClassName, "routerAdapter").build())
+                .addParameter(ParameterSpec.builder(ClassName.get(String.class), "targetRoutePath").build())
+                .addParameter(ParameterSpec.builder(ClassName.get(String.class), "spareRoute").build())
+                .addStatement("$T adapter = ($T) routerAdapter", routerAdapter, routerAdapter);
+
+
+        if (targetActivityAttr == null) {
+            builder.addStatement("$T.getInstance().build(\"$N\").navigation()", aRouterClassName, targetRoutePath);
+            return builder.build();
+        }
+
+        addWithParameter(targetActivityAttr, routerCardAttribute, targetRoutePath, builder);
+        addWithParameter(routerCardAttribute.getSpareActivityAttribute(),
+                routerCardAttribute, routerCardAttribute.getSpareRoute(), builder);
+
+
+        return builder.build();
+    }
+
+    /**
+     * 添加参数
+     *
+     * @param activityAttr        activity 中的自动绑定的字段
+     * @param routerCardAttribute 路由适配器参数
+     * @param builder             方法构建者
+     */
+    private void addWithParameter(ActivityAttribute activityAttr,
+                                     RouterCardAttribute routerCardAttribute,
+                                     String routerPath,
+                                     MethodSpec.Builder builder) {
+
+        if (activityAttr == null) {
+            builder.addStatement("$T.getInstance().build(\"$N\").navigation()", aRouterClassName, routerPath);
+            return;
+        }
+
+        List<ActivityAttribute.FieldAttribute> attributes = activityAttr.getAttributes();
+
+        if (attributes != null && !attributes.isEmpty()) {
+
+            StringBuilder conditionBuilder = new StringBuilder();
+            for (ActivityAttribute.FieldAttribute attribute : attributes) {
+                String methodName = routerCardAttribute.getParameters().get(attribute.getName()).toString();
+                String condition = mWithHandler.requireNonNull("adapter." + methodName, attribute.getTypeName());
+                if (condition == null || condition.isEmpty()) {
+                    continue;
+                }
+
+                conditionBuilder.append(condition).append(" && ");
+            }
+
+            if (conditionBuilder.length() > 0) {
+                conditionBuilder.delete(conditionBuilder.length() - 4, conditionBuilder.length());
+            }
+
+            builder.beginControlFlow("if($N)", conditionBuilder.toString());
+
+            // with parameter
+            conditionBuilder = new StringBuilder();
+            for (ActivityAttribute.FieldAttribute attribute : attributes) {
+                String methodName = routerCardAttribute.getParameters().get(attribute.getName()).toString();
+                String withParameter = mWithHandler.withParameter(attribute.getName(), "adapter." + methodName, attribute.getTypeName());
+                if (withParameter == null || withParameter.isEmpty()) {
+                    continue;
+                }
+
+                conditionBuilder.append(".").append(withParameter);
+            }
+            builder.addStatement("$T.getInstance().build(\"$N\")$N.navigation()", aRouterClassName,
+                    routerPath, conditionBuilder.toString());
+            builder.addStatement("return");
+            builder.endControlFlow();
+        }
     }
 
     List<RouterWrapperAttribute> getAttributes() {
