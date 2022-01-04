@@ -1,5 +1,7 @@
 package org.sheedon.arouter.compiler;
 
+import org.sheedon.compilationtool.retrieval.core.IGenericsRecord;
+
 import java.util.Objects;
 
 /**
@@ -13,7 +15,7 @@ import java.util.Objects;
  * @Email: sheedonsun@163.com
  * @Date: 2021/12/5 2:15 下午
  */
-public class BRGenericsRecord implements Cloneable {
+public class BRGenericsRecord implements IGenericsRecord,Cloneable {
 
     // 请求卡片
     public static final String T = "T";
@@ -36,6 +38,11 @@ public class BRGenericsRecord implements Cloneable {
             genericsArray = entityClassName;
             sign = true;
         }
+    }
+
+    @Override
+    public String get(String typeName) {
+        return genericsArray;
     }
 
     /**

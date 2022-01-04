@@ -11,8 +11,8 @@ import com.squareup.javapoet.ClassName;
  */
 public class RouterWrapperAttribute {
 
-    private String[] notificationType;
-    private ClassName wrapperClassName;
+    private final String[] notificationType;
+    private final ClassName wrapperClassName;
 
     public RouterWrapperAttribute(String[] notificationType, ClassName wrapperClassName) {
         this.notificationType = notificationType;

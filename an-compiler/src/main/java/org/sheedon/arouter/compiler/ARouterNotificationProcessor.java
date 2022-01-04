@@ -8,6 +8,8 @@ import com.squareup.javapoet.ClassName;
 import org.sheedon.arouter.annotation.BindParameter;
 import org.sheedon.arouter.annotation.BindRouter;
 import org.sheedon.arouter.annotation.RouteStrategy;
+import org.sheedon.compilationtool.retrieval.ClassGenericsRetrieval;
+import org.sheedon.compilationtool.retrieval.core.RetrievalClassModel;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -142,7 +144,8 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             cardAttribute.addFieldAttribute(parameter.name(), element.asType());
         }
 
-        BindRouterClassSearcher routerSearcher = new BindRouterClassSearcher();
+        ANGenericsRetrievalStrategy strategy = new ANGenericsRetrievalStrategy();
+        ClassGenericsRetrieval retrieval = new ClassGenericsRetrieval(strategy);
 
         // 路由策略中核实 备用路径有，但是Activity中没有，则编译不过
         // 通知类型为空 编译不过
@@ -150,7 +153,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         Set<? extends Element> spareRouteElements = roundEnvironment.getElementsAnnotatedWith(RouteStrategy.class);
         for (Element element : spareRouteElements) {
             TypeElement typeElement = (TypeElement) element;
-            RetrievalClassModel retrievalClassModel = routerSearcher.searchClassGenerics(typeElement, mTypeUtils, mMessager);
+            RetrievalClassModel retrievalClassModel = retrieval.searchGenerics(typeElement, mTypeUtils);
             if (!retrievalClassModel.getRecord().isCompeted()) {
                 return false;
             }
@@ -203,7 +206,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             checkBindRouterCard(activityAttribute, cardAttribute, canonicalName, activityQualifiedName, element);
 
             // 传入 路由Card 用于构建
-            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute, activityAttribute, routerSearcher);
+            wrapperBuilder.buildRouterWrapper(cardAttribute, targetRoute, activityAttribute, strategy);
         }
 
         builder.buildClass(wrapperBuilder.getAttributes());

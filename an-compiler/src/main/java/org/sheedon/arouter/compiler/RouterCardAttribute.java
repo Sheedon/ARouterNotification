@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 /**
  * 路由卡片参数
@@ -20,7 +19,7 @@ class RouterCardAttribute {
     private String spareRoute;
     private ActivityAttribute spareActivityAttribute;
     private String[] notificationType;
-    private Map<String, ExecutableElement> parameters = new HashMap<>();
+    private final Map<String, ExecutableElement> parameters = new HashMap<>();
 
     public void addRouteInfo(TypeElement typeElement, String path,
                              String[] notificationType) {

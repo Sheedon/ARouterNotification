@@ -10,6 +10,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import org.sheedon.arouter.model.BindRouterCard;
 import org.sheedon.arouter.model.BindRouterWrapper;
+import org.sheedon.compilationtool.retrieval.core.RetrievalClassModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ class RouterWrapperBuilder {
     // 文件构造者
     private final Filer mFiler;
     // 全部构建的包装类 参数
-    private List<RouterWrapperAttribute> attributes = new ArrayList<>();
+    private final List<RouterWrapperAttribute> attributes = new ArrayList<>();
     // 字段核实并且填充的处理者
     private final WithHandler mWithHandler;
 
@@ -54,17 +55,17 @@ class RouterWrapperBuilder {
      *
      * @param cardAttribute   路由卡片参数
      * @param targetRoutePath 目标路径
-     * @param routerSearcher  路由检索者
+     * @param strategy        路由检索者策略
      */
     void buildRouterWrapper(RouterCardAttribute cardAttribute, String targetRoutePath,
-                            ActivityAttribute targetActivity, BindRouterClassSearcher routerSearcher) {
+                            ActivityAttribute targetActivity, ANGenericsRetrievalStrategy strategy) {
         try {
             TypeElement typeElement = cardAttribute.getTypeElement();
             String className = typeElement.getSimpleName().toString();
 
             // 获取泛型
-            RetrievalClassModel retrievalClassModel = routerSearcher.getRetrievalClassByClassName(typeElement.getQualifiedName().toString());
-            String genericName = retrievalClassModel.getRecord().get();
+            RetrievalClassModel retrievalClassModel = strategy.retrievalClassMap().get(typeElement.getQualifiedName().toString());
+            String genericName = retrievalClassModel.getRecord().get(BRGenericsRecord.T);
 
             TypeName superclassTypeName = loadSuperclass(genericName);
             String wrapperClassName = className + "Wrapper";
@@ -101,14 +102,6 @@ class RouterWrapperBuilder {
         }
 
     }
-
-//    private ParameterizedTypeName convertParameterizedTypeName(TypeName typeName){
-//        if(typeName instanceof ParameterizedTypeName){
-//            return (ParameterizedTypeName) typeName;
-//        }
-//
-//        mTypeUtils.
-//    }
 
     /**
      * 继承父类

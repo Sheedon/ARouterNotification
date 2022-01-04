@@ -1,6 +1,5 @@
 package org.sheedon.arouter.compiler;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +63,7 @@ class WithHandler {
      *
      * @param methodName 方法名
      * @param returnType 返回类型
-     * @return
+     * @return String 合并方法名
      */
     String requireNonNull(String methodName, String returnType) {
         String result = requireMap.get(returnType);
@@ -80,7 +79,7 @@ class WithHandler {
         if (result == null) {
             return "";
         }
-        Object[] methods = getMethods(result, methodName,key);
+        Object[] methods = getMethods(result, methodName, key);
         return String.format(result, methods);
     }
 
