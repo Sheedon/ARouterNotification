@@ -289,7 +289,11 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         Map<String, ExecutableElement> parameters = cardAttribute.getParameters();
         for (ActivityAttribute.FieldAttribute attribute : attributes) {
             String name = attribute.getName();
-            String returnType = parameters.get(name).getReturnType().toString();
+            ExecutableElement executableElement = parameters.get(name);
+            if(executableElement == null){
+                continue;
+            }
+            String returnType = executableElement.getReturnType().toString();
             if (returnType == null) {
                 // 路由Card的@BindParameter 找不到对应 activity中@Autowired 的 name
                 mMessager.printMessage(Diagnostic.Kind.ERROR, "The @BindParameter of the " + canonicalName

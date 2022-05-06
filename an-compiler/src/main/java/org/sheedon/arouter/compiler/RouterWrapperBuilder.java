@@ -15,8 +15,10 @@ import org.sheedon.compilationtool.retrieval.core.RetrievalClassModel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -213,7 +215,10 @@ class RouterWrapperBuilder {
 
             StringBuilder conditionBuilder = new StringBuilder();
             for (ActivityAttribute.FieldAttribute attribute : attributes) {
-                String methodName = routerCardAttribute.getParameters().get(attribute.getName()).toString();
+                String methodName = getMethodName(routerCardAttribute, attribute);
+                if(methodName == null){
+                    continue;
+                }
                 String condition = mWithHandler.requireNonNull("adapter." + methodName, attribute.getTypeName());
                 if (condition == null || condition.isEmpty()) {
                     continue;
@@ -231,7 +236,10 @@ class RouterWrapperBuilder {
             // with parameter
             conditionBuilder = new StringBuilder();
             for (ActivityAttribute.FieldAttribute attribute : attributes) {
-                String methodName = routerCardAttribute.getParameters().get(attribute.getName()).toString();
+                String methodName = getMethodName(routerCardAttribute, attribute);
+                if(methodName == null){
+                    continue;
+                }
                 String withParameter = mWithHandler.withParameter(attribute.getName(), "adapter." + methodName, attribute.getTypeName());
                 if (withParameter == null || withParameter.isEmpty()) {
                     continue;
@@ -244,6 +252,18 @@ class RouterWrapperBuilder {
             builder.addStatement("return");
             builder.endControlFlow();
         }
+    }
+
+    private String getMethodName(RouterCardAttribute routerCardAttribute, ActivityAttribute.FieldAttribute attribute) {
+        Map<String, ExecutableElement> parameters = routerCardAttribute.getParameters();
+        if (parameters == null) {
+            return null;
+        }
+        ExecutableElement element = parameters.get(attribute.getName());
+        if (element == null) {
+            return null;
+        }
+        return element.toString();
     }
 
     List<RouterWrapperAttribute> getAttributes() {
