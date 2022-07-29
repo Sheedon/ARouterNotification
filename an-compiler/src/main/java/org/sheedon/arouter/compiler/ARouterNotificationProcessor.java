@@ -155,7 +155,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
             TypeElement typeElement = (TypeElement) element;
             RetrievalClassModel retrievalClassModel = retrieval.searchGenerics(typeElement, mTypeUtils);
             if (!retrievalClassModel.getRecord().isCompeted()) {
-                return false;
+                continue;
             }
 
             String qualifiedName = typeElement.getQualifiedName().toString();
@@ -290,7 +290,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         for (ActivityAttribute.FieldAttribute attribute : attributes) {
             String name = attribute.getName();
             ExecutableElement executableElement = parameters.get(name);
-            if(executableElement == null){
+            if (executableElement == null) {
                 continue;
             }
             String returnType = executableElement.getReturnType().toString();
