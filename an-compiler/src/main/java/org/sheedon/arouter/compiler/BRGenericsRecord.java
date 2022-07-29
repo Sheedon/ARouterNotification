@@ -4,6 +4,8 @@ import org.sheedon.compilationtool.retrieval.core.IGenericsRecord;
 
 import java.util.Objects;
 
+import javax.lang.model.type.TypeMirror;
+
 /**
  * BindRouterCard 泛型记录
  * 包含对应位置下的泛型内容
@@ -15,13 +17,13 @@ import java.util.Objects;
  * @Email: sheedonsun@163.com
  * @Date: 2021/12/5 2:15 下午
  */
-public class BRGenericsRecord implements IGenericsRecord,Cloneable {
+public class BRGenericsRecord implements IGenericsRecord, Cloneable {
 
     // 请求卡片
     public static final String T = "T";
 
     // 泛型组
-    private String genericsArray = "";
+    private TypeMirror typeMirror;
     // 标志 false：没有填充，true：填充
     private boolean sign = false;
 
@@ -30,28 +32,20 @@ public class BRGenericsRecord implements IGenericsRecord,Cloneable {
      * 当前需要匹配同类型，并且设置到genericsArray制定的位置上
      * genericsArray : T
      *
-     * @param typeName        泛型类型
-     * @param entityClassName 实体类型
+     * @param typeName   泛型类型
+     * @param typeMirror 实体类型
      */
-    public void put(String typeName, String entityClassName) {
+    @Override
+    public void put(String typeName, TypeMirror typeMirror) {
         if (Objects.equals(typeName, T)) {
-            genericsArray = entityClassName;
+            this.typeMirror = typeMirror;
             sign = true;
         }
     }
 
     @Override
-    public String get(String typeName) {
-        return genericsArray;
-    }
-
-    /**
-     * 获取 AbstractRequestRouter中泛型所绑定的实体类全类名
-     *
-     * @return 实体类全类名
-     */
-    public String get() {
-        return genericsArray;
+    public TypeMirror get(String typeName) {
+        return typeMirror;
     }
 
     public boolean isCompeted() {
@@ -65,12 +59,12 @@ public class BRGenericsRecord implements IGenericsRecord,Cloneable {
     public BRGenericsRecord clone() {
         try {
             BRGenericsRecord record = (BRGenericsRecord) super.clone();
-            record.genericsArray = genericsArray;
+            record.typeMirror = typeMirror;
             return record;
         } catch (CloneNotSupportedException e) {
             BRGenericsRecord record = new BRGenericsRecord();
             record.sign = sign;
-            record.genericsArray = genericsArray;
+            record.typeMirror = typeMirror;
             return record;
         }
     }
@@ -78,7 +72,7 @@ public class BRGenericsRecord implements IGenericsRecord,Cloneable {
     /**
      * 获取泛型集合
      */
-    public String getGenericsArray() {
-        return genericsArray;
+    public TypeMirror getGenericsArray() {
+        return typeMirror;
     }
 }

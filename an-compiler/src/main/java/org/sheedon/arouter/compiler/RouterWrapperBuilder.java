@@ -21,6 +21,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
@@ -67,9 +68,9 @@ class RouterWrapperBuilder {
 
             // 获取泛型
             RetrievalClassModel retrievalClassModel = strategy.retrievalClassMap().get(typeElement.getQualifiedName().toString());
-            String genericName = retrievalClassModel.getRecord().get(BRGenericsRecord.T);
+            TypeMirror typeMirror = retrievalClassModel.getRecord().get(BRGenericsRecord.T);
 
-            TypeName superclassTypeName = loadSuperclass(genericName);
+            TypeName superclassTypeName = loadSuperclass(typeMirror);
             String wrapperClassName = className + "Wrapper";
 
             // 路由适配器类
@@ -80,7 +81,7 @@ class RouterWrapperBuilder {
             methodSpecList.add(buildMethodImpl(targetRoutePath, cardAttribute.getSpareRoute()));
 
 
-            methodSpecList.add(buildStartActivity(genericName, routerAdapter,
+            methodSpecList.add(buildStartActivity(typeMirror, routerAdapter,
                     cardAttribute, targetActivity));
 
             TypeSpec wrapperTypeSpec = TypeSpec.classBuilder(wrapperClassName)
@@ -95,6 +96,7 @@ class RouterWrapperBuilder {
 
 
             javaFile.writeTo(mFiler);
+//            javaFile.writeTo(System.out);
 
             attributes.add(new RouterWrapperAttribute(cardAttribute.getNotificationType(),
                     ClassName.get(packageName, wrapperClassName)));
@@ -108,10 +110,10 @@ class RouterWrapperBuilder {
     /**
      * 继承父类
      *
-     * @param genericName 泛型名
+     * @param typeMirror 泛型名
      */
-    private TypeName loadSuperclass(String genericName) {
-        return ParameterizedTypeName.get(ClassName.get(BindRouterWrapper.class), ClassName.bestGuess(genericName));
+    private TypeName loadSuperclass(TypeMirror typeMirror) {
+        return ParameterizedTypeName.get(ClassName.get(BindRouterWrapper.class), ClassName.get(typeMirror));
     }
 
     /**
@@ -153,16 +155,16 @@ class RouterWrapperBuilder {
     /**
      * 启动Activity
      *
-     * @param genericName         泛型名
+     * @param typeMirror         泛型名
      * @param routerAdapter       路由适配器类
      * @param routerCardAttribute 路由适配器参数
      * @param targetActivityAttr  目标Activity参数
      * @return MethodSpec
      */
-    private MethodSpec buildStartActivity(String genericName, ClassName routerAdapter,
+    private MethodSpec buildStartActivity(TypeMirror typeMirror, ClassName routerAdapter,
                                           RouterCardAttribute routerCardAttribute,
                                           ActivityAttribute targetActivityAttr) {
-        TypeName routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), ClassName.bestGuess(genericName));
+        TypeName routerClassName = ParameterizedTypeName.get(ClassName.get(BindRouterCard.class), ClassName.get(typeMirror));
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("startActivity")
                 .addModifiers(Modifier.PROTECTED)
@@ -231,7 +233,9 @@ class RouterWrapperBuilder {
                 conditionBuilder.delete(conditionBuilder.length() - 4, conditionBuilder.length());
             }
 
-            builder.beginControlFlow("if($N)", conditionBuilder.toString());
+            if(conditionBuilder.length()>0) {
+                builder.beginControlFlow("if($N)", conditionBuilder.toString());
+            }
 
             // with parameter
             conditionBuilder = new StringBuilder();
@@ -250,7 +254,9 @@ class RouterWrapperBuilder {
             builder.addStatement("$T.getInstance().build($N)$N.navigation()", aRouterClassName,
                     routerPath, conditionBuilder.toString());
             builder.addStatement("return");
-            builder.endControlFlow();
+            if(conditionBuilder.length()>0) {
+                builder.endControlFlow();
+            }
         }
     }
 

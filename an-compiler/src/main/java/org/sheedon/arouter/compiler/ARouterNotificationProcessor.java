@@ -153,10 +153,7 @@ public class ARouterNotificationProcessor extends AbstractProcessor {
         Set<? extends Element> spareRouteElements = roundEnvironment.getElementsAnnotatedWith(RouteStrategy.class);
         for (Element element : spareRouteElements) {
             TypeElement typeElement = (TypeElement) element;
-            RetrievalClassModel retrievalClassModel = retrieval.searchGenerics(typeElement, mTypeUtils);
-            if (!retrievalClassModel.getRecord().isCompeted()) {
-                continue;
-            }
+            retrieval.searchGenerics(typeElement, mTypeUtils);
 
             String qualifiedName = typeElement.getQualifiedName().toString();
             RouteStrategy route = element.getAnnotation(RouteStrategy.class);

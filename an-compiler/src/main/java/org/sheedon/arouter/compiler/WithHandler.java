@@ -31,6 +31,7 @@ class WithHandler {
             put(Float.class.getCanonicalName(), "%s != 0");
             put(CharSequence.class.getCanonicalName(), "(%s != null || !%s.isEmpty())");
             put(Object.class.getCanonicalName(), "%s != null");
+            put("boolean", "%s");
         }
     };
 
@@ -89,6 +90,7 @@ class WithHandler {
      */
     private String[] getMethods(String result, String methodName) {
         int size = result.split("%s").length - 1;
+        size = size <= 0 ? 1 : size;
         String[] methodNames = new String[size];
         for (int index = 0; index < size; index++) {
             methodNames[index] = methodName;
